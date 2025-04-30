@@ -1,100 +1,123 @@
-# prediction_pipeline_pickle.py
-
 import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
-import joblib
-import unittest
+from sklearn.preprocessing import StandardScaler
+from category_encoders import CountEncoder
 
-# === Étape de transformation personnalisée ===
-class NanRemover(BaseEstimator, TransformerMixin):
-    def __init__(self, threshold=0.9):
-        self.threshold = threshold
-        self.columns_to_remove = []
+
+class ColumnTypeIdentifier:
+    """
+    Utilitaire pour identifier les colonnes numériques et catégorielles.
+    """
+    @staticmethod
+    def identify(df):
+        num_cols = df.select_dtypes(include=["number"]).columns.tolist()
+        cat_cols = df.select_dtypes(exclude=["number"]).columns.tolist()
+        return num_cols, cat_cols
+
+
+class MissingValueFiller(BaseEstimator, TransformerMixin):
+    """
+    Remplit les valeurs manquantes :
+    - 0 pour les colonnes numériques
+    - "Inconnu" pour les colonnes catégorielles
+    """
+    def __init__(self, num_cols=None, cat_cols=None):
+        self.num_cols = num_cols
+        self.cat_cols = cat_cols
 
     def fit(self, X, y=None):
-        self.columns_to_remove = [
-            col for col in X.columns if X[col].isna().mean() > self.threshold
-        ]
         return self
 
     def transform(self, X):
-        return X.drop(columns=self.columns_to_remove, errors='ignore')
+        X_copy = X.copy()
+        if self.num_cols:
+            for col in self.num_cols:
+                if col in X_copy.columns:
+                    X_copy[col] = X_copy[col].fillna(0)
+        if self.cat_cols:
+            for col in self.cat_cols:
+                if col in X_copy.columns:
+                    X_copy[col] = X_copy[col].fillna("Inconnu")
+        return X_copy
 
-# === Classe pour entraîner et sauvegarder un pipeline sklearn ===
-class ModelTrainer:
-    def __init__(self, threshold=0.4):
-        self.pipeline = Pipeline([
-            ('nan_remover', NanRemover(threshold=threshold)),
-            ('regressor', LinearRegression())
-        ])
 
-    def train(self, X, y):
-        self.pipeline.fit(X, y)
-        return self.pipeline
+class CountCategoricalEncoder(BaseEstimator, TransformerMixin):
+    """
+    Encode les variables catégorielles avec CountEncoder.
+    """
+    def __init__(self, cat_cols=None):
+        self.cat_cols = cat_cols
+        self.encoder = None
 
-    def save(self, path="pipeline_frequence.pkl"):
-        joblib.dump(self.pipeline, path)
+    def fit(self, X, y=None):
+        self.encoder = CountEncoder(cols=self.cat_cols)
+        self.encoder.fit(X)
+        return self
 
-    def load(self, path="pipeline_frequence.pkl"):
-        self.pipeline = joblib.load(path)
-        return self.pipeline
+    def transform(self, X):
+        return self.encoder.transform(X.copy())
 
-    def predict(self, X):
-        return self.pipeline.predict(X)
 
-# === Exemple d'utilisation (à commenter en prod) ===
-if __name__ == "__main__":
-    # Données fictives
-    df = pd.DataFrame({
-        'A': [1, 2, np.nan, 4, 5],
-        'B': [1, 1, 1, 1, 1],
-        'C': [np.nan, np.nan, np.nan, np.nan, 5],
-        'target': [10, 15, 10, 20, 25]
-    })
+class ColumnDropper(BaseEstimator, TransformerMixin):
+    """
+    Supprime :
+    - Les colonnes avec beaucoup de valeurs manquantes (0 ou "Inconnu")
+    - Les colonnes à faible variance
+    - Les colonnes très corrélées
+    """
+    def __init__(self, num_cols=None, missing_thresh=0.4, var_thresh=0.01, corr_thresh=0.95):
+        self.num_cols = num_cols
+        self.missing_thresh = missing_thresh
+        self.var_thresh = var_thresh
+        self.corr_thresh = corr_thresh
+        self.columns_to_drop_ = []
 
-    X = df.drop(columns='target')
-    y = df['target']
+    def fit(self, X, y=None):
+        X_copy = X.copy()
+        drop_cols = []
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        for col in X_copy.columns:
+            if col in self.num_cols:
+                missing_ratio = (X_copy[col] == 0).sum() / len(X_copy)
+            else:
+                missing_ratio = (X_copy[col] == "Inconnu").sum() / len(X_copy)
+            if missing_ratio > self.missing_thresh:
+                drop_cols.append(col)
 
-    trainer = ModelTrainer(threshold=0.8)
-    trainer.train(X_train, y_train)
-    trainer.save("pipeline_frequence.pkl")
-    print("✅ Pipeline entraîné et sauvegardé avec succès.")
+        # Faible variance
+        var_series = X_copy.var(numeric_only=True)
+        low_var_cols = var_series[var_series < self.var_thresh].index.tolist()
+        drop_cols += low_var_cols
 
-    # Chargement et prédiction
-    loaded_pipeline = trainer.load("pipeline_frequence.pkl")
-    predictions = trainer.predict(X_test)
-    print("🔍 Prédictions :", predictions)
+        # Corrélation élevée
+        corr_matrix = X_copy.select_dtypes(include=["number"]).corr().abs()
+        upper_tri = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+        high_corr_cols = [col for col in upper_tri.columns if any(upper_tri[col] > self.corr_thresh)]
+        drop_cols += high_corr_cols
 
-# === TESTS UNITAIRES ===
-class TestModelTrainer(unittest.TestCase):
-    def setUp(self):
-        self.df = pd.DataFrame({
-            'A': [1, 2, np.nan, 4, 5],
-            'B': [1, 1, 1, 1, 1],
-            'C': [np.nan, np.nan, np.nan, np.nan, 5],
-            'target': [10, 15, 10, 20, 25]
-        })
-        self.X = self.df.drop(columns='target')
-        self.y = self.df['target']
-        self.trainer = ModelTrainer(threshold=0.8)
+        self.columns_to_drop_ = list(set(drop_cols))
+        return self
 
-    def test_pipeline_training_and_prediction(self):
-        self.trainer.train(self.X, self.y)
-        preds = self.trainer.predict(self.X)
-        self.assertEqual(len(preds), len(self.X))
+    def transform(self, X):
+        return X.drop(columns=self.columns_to_drop_, errors='ignore')
 
-    def test_model_saving_and_loading(self):
-        self.trainer.train(self.X, self.y)
-        self.trainer.save("test_pipeline.pkl")
-        loaded = self.trainer.load("test_pipeline.pkl")
-        preds_loaded = self.trainer.predict(self.X)
-        self.assertEqual(len(preds_loaded), len(self.X))
 
-if __name__ == "__main__":
-    unittest.main(argv=[''], exit=False)
+class ScalerWrapper(BaseEstimator, TransformerMixin):
+    """
+    Standardise les colonnes numériques avec StandardScaler.
+    """
+    def __init__(self, num_cols=None):
+        self.num_cols = num_cols
+        self.scaler = StandardScaler()
+
+    def fit(self, X, y=None):
+        if self.num_cols:
+            self.scaler.fit(X[self.num_cols])
+        return self
+
+    def transform(self, X):
+        X_copy = X.copy()
+        if self.num_cols:
+            X_copy[self.num_cols] = self.scaler.transform(X_copy[self.num_cols])
+        return X_copy
