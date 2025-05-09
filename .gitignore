@@ -3,3 +3,5 @@ train_output_DzPxaPY (1).csv
 test_input_5qJzHrr.csv
 *.pyc
 /env
+backup_csv/train_input_Z61KlZo.csv
+backup_csv/train_output_DzPxaPY.csv
