@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from category_encoders import CountEncoder
-import factorized_functions as ff
+import models_pkl.frequence.factorized_functions as ff
 
 class TestFactorizedFunctions:
 
