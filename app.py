@@ -22,7 +22,14 @@ class HealthCheck(Resource):
     def get(self):
         return {"status": "ok", "message": "API is up and running!"}, 200
 
-
+@ns.route("/freq")
+class Predict(Resource):
+    @ns.expect(input_model)
+    def post(self):
+        payload = api.payload
+        df = pd.DataFrame([payload])
+        prediction = model.predict(df)[0]
+        return {"prediction": float(prediction)}
 
 if __name__ == "__main__":
     app.run(debug=True)
