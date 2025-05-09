@@ -8,7 +8,20 @@ from xgboost import XGBRegressor
 
 # ——————————————————————————————————————
 # Étapes de prétraitement custom
-# ——————————————————————————————————————
+# —————————————————————————————————————-
+
+class ColumnSelector(BaseEstimator, TransformerMixin):
+    """
+    Garde uniquement les colonnes sélectionnées.
+    """
+    def __init__(self, selected_columns):
+        self.selected_columns = selected_columns
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        return X[self.selected_columns].copy()
 
 class MissingValueFiller(BaseEstimator, TransformerMixin):
     def __init__(self, num_cols=None, cat_cols=None):
@@ -145,7 +158,8 @@ CATEGORIAL_COLUMNS = ["ACTIVIT2", "VOCATION", "CARACT1", "CARACT3", "CARACT4", "
     "NBJRR50_MSOM_A", "NBJRR1_MM_A", "NBJRR1_MMAX_A", "NBJRR1_MSOM_A", "NBJRR5_MM_A", "NBJRR5_MMAX_A",
     "NBJRR5_MSOM_A", "NBJRR10_MM_A", "NBJRR10_MMAX_A", "NBJRR10_MSOM_A", "NBJRR30_MM_A",
     "NBJRR30_MMAX_A", "NBJRR30_MSOM_A", "NBJRR100_MM_A", "NBJRR100_MMAX_A", "NBJRR100_MSOM_A",
-    "RR_VOR_MM_A", "RR_VOR_MMAX_A", "RRAB_VOR_MM_A", "RRAB_VOR_MMAX_A", "ESPINSEE" ]  # Mets ici la liste complète
+    "RR_VOR_MM_A", "RR_VOR_MMAX_A", "RRAB_VOR_MM_A", "RRAB_VOR_MMAX_A", "ESPINSEE" ]  
+
 NUMERICAL_COLUMNS = [ "ID",
   "TYPERS",
   "ANCIENNETE",
@@ -170,7 +184,9 @@ NUMERICAL_COLUMNS = [ "ID",
   "capital_total",
   "surface_par_batiment",
   "capital_par_surface",
-  "capital_moyen_par_batiment" ]   # Mets ici la liste complète
+  "capital_moyen_par_batiment" ]   
+
+ALL_COLUMNS = NUMERICAL_COLUMNS + CATEGORIAL_COLUMNS
 
 # ——————————————————————————————————————
 # Chargement du modèle entraîné
@@ -183,6 +199,7 @@ model = joblib.load("xgb_regressor_model.pkl")
 # ——————————————————————————————————————
 
 pipeline = Pipeline(steps=[
+    ("select", ColumnSelector(selected_columns=ALL_COLUMNS)),
     ("missing", MissingValueFiller(num_cols=NUMERICAL_COLUMNS, cat_cols=CATEGORIAL_COLUMNS)),
     ("encoding", ManualCountEncoder(cat_cols=CATEGORIAL_COLUMNS)),
     ("drop", ColumnDropper(num_cols=NUMERICAL_COLUMNS)),
