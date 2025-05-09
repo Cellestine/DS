@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from category_encoders import CountEncoder
-import factorized_functions as ff
+import old.factorized_functions as ff
 
 class TestFactorizedFunctions:
 
