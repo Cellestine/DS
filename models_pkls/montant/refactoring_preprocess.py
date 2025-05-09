@@ -15,7 +15,7 @@ class OrdinalEncoderByTargetFrequency(BaseEstimator, TransformerMixin):
         - id_col : str, nom de la colonne d'identification (par défaut 'ID')
     """
 
-    def __init__(self, target_col='FREQ', id_col='ID'):
+    def __init__(self, target_col="FREQ", id_col="ID"):
         """
         Initialise l'encodeur avec les colonnes cibles et d'identification.
         """
@@ -35,7 +35,9 @@ class OrdinalEncoderByTargetFrequency(BaseEstimator, TransformerMixin):
             if col in df.columns:
                 freq = df.groupby(col)[self.target_col].sum()
                 sorted_values = freq.sort_values().index
-                self.encoding_maps[col] = {val: i for i, val in enumerate(sorted_values)}
+                self.encoding_maps[col] = {
+                    val: i for i, val in enumerate(sorted_values)
+                }
         return self
 
     def transform(self, x_data):
@@ -57,7 +59,7 @@ class CategoricalEncoderByTargetFrequency(BaseEstimator, TransformerMixin):
         - id_col : str, nom de la colonne d'identification (par défaut 'ID')
     """
 
-    def __init__(self, target_col='FREQ', id_col='ID'):
+    def __init__(self, target_col="FREQ", id_col="ID"):
         """
         Initialise l'encodeur avec les colonnes cibles et d'identification.
         """
@@ -77,7 +79,9 @@ class CategoricalEncoderByTargetFrequency(BaseEstimator, TransformerMixin):
             if col in df.columns:
                 freq = df.groupby(col)[self.target_col].sum()
                 sorted_values = freq.sort_values().index
-                self.encoding_maps[col] = {val: i for i, val in enumerate(sorted_values)}
+                self.encoding_maps[col] = {
+                    val: i for i, val in enumerate(sorted_values)
+                }
         return self
 
     def transform(self, x_data):
@@ -95,6 +99,7 @@ class NumericConverter(BaseEstimator, TransformerMixin):
     """
     Convertit les colonnes numériques en types numériques.
     """
+
     def __init__(self):
         self.columns = list(NUMERIC_COLUMNS)
 
@@ -111,6 +116,6 @@ class NumericConverter(BaseEstimator, TransformerMixin):
         """
         x_data_converted = x_data.copy()
         x_data_converted[self.columns] = x_data_converted[self.columns].apply(
-            lambda col: pd.to_numeric(col, errors='coerce')
+            lambda col: pd.to_numeric(col, errors="coerce")
         )
         return x_data_converted
