@@ -51,6 +51,7 @@ def drop_columns_with_high_missing_or_low_variance(train_df, test_df, num_cols, 
 
     # Faible variance
     low_variance = train_df.select_dtypes(include=['number']).var()
+    low_variance = test_df.select_dtypes(include=['number']).var()
     low_var_cols = low_variance[low_variance < var_threshold].index.tolist()
     train_df.drop(columns=low_var_cols, inplace=True)
     test_df.drop(columns=low_var_cols, inplace=True)
