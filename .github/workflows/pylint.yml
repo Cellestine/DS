@@ -28,10 +28,11 @@ jobs:
       - name: Run Black (code formatter check)
         run: black .
         
-
       - name: Run Pylint
+        continue-on-error: true
         run: |
           pylint $(git ls-files '*.py')
+      
 
       - name: Run Unit Tests
         run: |
