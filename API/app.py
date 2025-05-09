@@ -3,7 +3,9 @@ from flask_restx import Api, Resource
 import pandas as pd
 from models.loader import load_model_freq, load_model_montant
 from models.input_schema import get_input_model_freq, get_input_model_montant
-from models_pkls.frequence.model_to_pkl import CATEGORIAL_COLUMNS
+#from models_pkls.frequence.model_to_pkl import CATEGORIAL_COLUMNS
+from models.config import CATEGORIAL_COLUMNS
+from models.config_montant import CATEGORICAL_COLUMNS_MONTANT, ORDINAL_COLUMNS_MONTANT
 
 # Init app
 app = Flask(__name__)
@@ -47,8 +49,13 @@ class PredictMontant(Resource):
         df = pd.DataFrame([payload])
 
         # Ajout des colonnes catégorielles manquantes avec valeur "Inconnu"
-        for col in CATEGORIAL_COLUMNS:
+        for col in CATEGORICAL_COLUMNS_MONTANT:
             df[col] = "Inconnu"  # ou une valeur par défaut raisonnable
+
+        # Colonnes ordinales manquantes : -1
+        for col in ORDINAL_COLUMNS_MONTANT:
+            if col not in df.columns:
+                df[col] = -1
 
         prediction = model_montant.predict(df)[0]
         return {"prediction": float(prediction)}

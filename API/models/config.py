@@ -1,3 +1,7 @@
+"""
+Ce module contient les constantes de configuration utilisées pour le traitement des données.
+"""
+
 CATEGORIAL_COLUMNS = [
     "ACTIVIT2", "VOCATION", "CARACT1", "CARACT3", "CARACT4", "TYPBAT1", "INDEM2", "FRCH1", "FRCH2",
     "DEROG12", "DEROG13", "DEROG14", "DEROG16", "TAILLE1", "TAILLE2", "COEFASS", "RISK6", "RISK8",
