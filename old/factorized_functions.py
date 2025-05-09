@@ -60,7 +60,7 @@ def drop_columns_with_high_missing_or_low_variance(train_df, test_df, num_cols, 
     test_df.drop(columns=low_var_cols, inplace=True)
 
     # Forte corrélation
-    corr_matrix = train_df.corr().abs()
+    corr_matrix = train_df.select_dtypes(include=["number"]).corr().abs()
     upper_tri = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
     high_corr_cols = [column for column in upper_tri.columns if any(upper_tri[column] > corr_threshold)]
     train_df.drop(columns=high_corr_cols, inplace=True)
