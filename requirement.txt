@@ -6,3 +6,4 @@ xgboost==2.0.3
 numpy==1.26.2
 flask-restx
 black==24.3.0
+category_encoders
