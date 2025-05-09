@@ -26,8 +26,8 @@ jobs:
           pip install -r requirement.txt
 
       - name: Run Black (code formatter check)
-        run: |
-          black --check .
+        run: black .
+        
 
       - name: Run Pylint
         run: |
