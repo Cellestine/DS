@@ -22,8 +22,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pylint
+          pip install pylint black
           pip install -r requirement.txt
+
+      - name: Run Black (code formatter check)
+        run: |
+          black --check .
 
       - name: Run Pylint
         run: |
@@ -31,4 +35,4 @@ jobs:
 
       - name: Run Unit Tests
         run: |
-          python test/tests_unitaires.py
+          python tests/tests_unitaires.py
