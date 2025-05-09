@@ -23,15 +23,14 @@ class TestFactorizedFunctions:
         self.success_count += 1
         print("✅ test_identify_column_types passed")
 
-    def test_fill_missing_values(self):
-        df1 = pd.DataFrame({'num': [1, np.nan], 'cat': ['a', None]})
+    def test_fill_missing_values_with_invalid_data(self):
+        df1 = pd.DataFrame({'num': [1, 'a'], 'cat': ['a', None]})
         df2 = pd.DataFrame({'num': [np.nan, 2], 'cat': [None, 'b']})
         num_cols, cat_cols = ['num'], ['cat']
         filled_df1, filled_df2 = ff.fill_missing_values(df1.copy(), df2.copy(), num_cols, cat_cols)
-        assert filled_df1['num'].iloc[1] == 0
+        assert filled_df1['num'].iloc[1] == 0  # 'a' should be coerced to NaN and then replaced by 0
         assert filled_df2['cat'].iloc[0] == "Inconnu"
-        self.success_count += 1
-        print("✅ test_fill_missing_values passed")
+        print("✅ test_fill_missing_values_with_invalid_data passed")
 
     def test_encode_categorical_features(self):
         df1 = pd.DataFrame({'A': ['x', 'y', 'x']})

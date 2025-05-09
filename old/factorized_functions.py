@@ -15,6 +15,9 @@ def identify_column_types(df):
 def fill_missing_values(train_df, test_df, num_cols, cat_cols):
     """Remplace les valeurs manquantes dans les colonnes numériques par 0 et les colonnes catégorielles par 'Inconnu'."""
     for col in num_cols:
+        # Ensure column is numeric
+        train_df[col] = pd.to_numeric(train_df[col], errors='coerce')
+        test_df[col] = pd.to_numeric(test_df[col], errors='coerce')
         train_df[col] = train_df[col].fillna(0)
         test_df[col] = test_df[col].fillna(0)
     for col in cat_cols:
