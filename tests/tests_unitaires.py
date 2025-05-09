@@ -59,7 +59,7 @@ class TestFactorizedFunctions:
 
     def run_all_tests(self):
         self.test_identify_column_types()
-        self.test_fill_missing_values()
+        self.test_fill_missing_values_with_invalid_data()
         self.test_encode_categorical_features()
         self.test_drop_columns_with_high_missing_or_low_variance()
 
