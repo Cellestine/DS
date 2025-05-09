@@ -3,7 +3,7 @@ from flask_restx import Api, Resource
 import pandas as pd
 from models.loader import load_model_freq, load_model_montant
 from models.input_schema import get_input_model_freq, get_input_model_montant
-from old.config import CATEGORIAL_COLUMNS
+from models_pkls.frequence.model_to_pkl import CATEGORIAL_COLUMNS
 
 # Init app
 app = Flask(__name__)
