@@ -26,7 +26,7 @@ input_model_freq = get_input_model_freq(api)
 input_model_montant = get_input_model_montant(api)
 
 
-@ns.route("/health")
+@api.route("/health")
 class HealthCheck(Resource):
     """Endpoint pour vérifier que l'API est opérationnelle."""
 
