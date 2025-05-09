@@ -8,22 +8,24 @@ import os
 
 def identify_column_types(df):
     """Identifie les colonnes numériques et catégorielles."""
-    num_cols = df.select_dtypes(include=['number']).columns.tolist()
-    cat_cols = df.select_dtypes(exclude=['number']).columns.tolist()
+    num_cols = df.select_dtypes(include=["number"]).columns.tolist()
+    cat_cols = df.select_dtypes(exclude=["number"]).columns.tolist()
     return num_cols, cat_cols
+
 
 def fill_missing_values(train_df, test_df, num_cols, cat_cols):
     """Remplace les valeurs manquantes dans les colonnes numériques par 0 et les colonnes catégorielles par 'Inconnu'."""
     for col in num_cols:
         # Ensure column is numeric
-        train_df[col] = pd.to_numeric(train_df[col], errors='coerce')
-        test_df[col] = pd.to_numeric(test_df[col], errors='coerce')
+        train_df[col] = pd.to_numeric(train_df[col], errors="coerce")
+        test_df[col] = pd.to_numeric(test_df[col], errors="coerce")
         train_df[col] = train_df[col].fillna(0)
         test_df[col] = test_df[col].fillna(0)
     for col in cat_cols:
         train_df[col] = train_df[col].fillna("Inconnu")
         test_df[col] = test_df[col].fillna("Inconnu")
     return train_df, test_df
+
 
 def encode_categorical_features(train_df, test_df, cat_cols):
     """Encode les variables catégorielles avec CountEncoder."""
@@ -32,7 +34,10 @@ def encode_categorical_features(train_df, test_df, cat_cols):
     test_df = encoder.transform(test_df)
     return train_df, test_df
 
-def drop_columns_with_high_missing_or_low_variance(train_df, test_df, num_cols, threshold=0.4, var_threshold=0.01, corr_threshold=0.95):
+
+def drop_columns_with_high_missing_or_low_variance(
+    train_df, test_df, num_cols, threshold=0.4, var_threshold=0.01, corr_threshold=0.95
+):
     """
     Supprime les colonnes avec :
     - Trop de valeurs manquantes simulées (0 ou 'Inconnu')
@@ -53,8 +58,8 @@ def drop_columns_with_high_missing_or_low_variance(train_df, test_df, num_cols, 
     test_df.drop(columns=columns_to_drop, inplace=True)
 
     # Faible variance
-    low_variance = train_df.select_dtypes(include=['number']).var()
-    low_variance = test_df.select_dtypes(include=['number']).var()
+    low_variance = train_df.select_dtypes(include=["number"]).var()
+    low_variance = test_df.select_dtypes(include=["number"]).var()
     low_var_cols = low_variance[low_variance < var_threshold].index.tolist()
     train_df.drop(columns=low_var_cols, inplace=True)
     test_df.drop(columns=low_var_cols, inplace=True)
@@ -62,13 +67,20 @@ def drop_columns_with_high_missing_or_low_variance(train_df, test_df, num_cols, 
     # Forte corrélation
     corr_matrix = train_df.select_dtypes(include=["number"]).corr().abs()
     upper_tri = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-    high_corr_cols = [column for column in upper_tri.columns if any(upper_tri[column] > corr_threshold)]
+    high_corr_cols = [
+        column
+        for column in upper_tri.columns
+        if any(upper_tri[column] > corr_threshold)
+    ]
     train_df.drop(columns=high_corr_cols, inplace=True)
     test_df.drop(columns=high_corr_cols, inplace=True)
 
     return train_df, test_df, columns_to_drop + low_var_cols + high_corr_cols
 
-def save_cleaned_data(train_df, test_df, train_path='train_cleaned.csv', test_path='test_cleaned.csv'):
+
+def save_cleaned_data(
+    train_df, test_df, train_path="train_cleaned.csv", test_path="test_cleaned.csv"
+):
     """Sauvegarde les fichiers nettoyés."""
     train_df.to_csv(train_path, index=False)
     test_df.to_csv(test_path, index=False)

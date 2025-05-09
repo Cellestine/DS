@@ -9,6 +9,7 @@ class ColumnTypeIdentifier:
     """
     Utilitaire pour identifier les colonnes numériques et catégorielles.
     """
+
     @staticmethod
     def identify(df):
         num_cols = df.select_dtypes(include=["number"]).columns.tolist()
@@ -22,6 +23,7 @@ class MissingValueFiller(BaseEstimator, TransformerMixin):
     - 0 pour les colonnes numériques
     - "Inconnu" pour les colonnes catégorielles
     """
+
     def __init__(self, num_cols=None, cat_cols=None):
         self.num_cols = num_cols
         self.cat_cols = cat_cols
@@ -46,6 +48,7 @@ class CountCategoricalEncoder(BaseEstimator, TransformerMixin):
     """
     Encode les variables catégorielles avec CountEncoder.
     """
+
     def __init__(self, cat_cols=None):
         self.cat_cols = cat_cols
         self.encoder = None
@@ -66,7 +69,10 @@ class ColumnDropper(BaseEstimator, TransformerMixin):
     - Les colonnes à faible variance
     - Les colonnes très corrélées
     """
-    def __init__(self, num_cols=None, missing_thresh=0.4, var_thresh=0.01, corr_thresh=0.95):
+
+    def __init__(
+        self, num_cols=None, missing_thresh=0.4, var_thresh=0.01, corr_thresh=0.95
+    ):
         self.num_cols = num_cols
         self.missing_thresh = missing_thresh
         self.var_thresh = var_thresh
@@ -92,21 +98,26 @@ class ColumnDropper(BaseEstimator, TransformerMixin):
 
         # Corrélation élevée
         corr_matrix = X_copy.select_dtypes(include=["number"]).corr().abs()
-        upper_tri = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-        high_corr_cols = [col for col in upper_tri.columns if any(upper_tri[col] > self.corr_thresh)]
+        upper_tri = corr_matrix.where(
+            np.triu(np.ones(corr_matrix.shape), k=1).astype(bool)
+        )
+        high_corr_cols = [
+            col for col in upper_tri.columns if any(upper_tri[col] > self.corr_thresh)
+        ]
         drop_cols += high_corr_cols
 
         self.columns_to_drop_ = list(set(drop_cols))
         return self
 
     def transform(self, X):
-        return X.drop(columns=self.columns_to_drop_, errors='ignore')
+        return X.drop(columns=self.columns_to_drop_, errors="ignore")
 
 
 class ScalerWrapper(BaseEstimator, TransformerMixin):
     """
     Standardise les colonnes numériques avec StandardScaler.
     """
+
     def __init__(self, num_cols=None):
         self.num_cols = num_cols
         self.scaler = StandardScaler()
