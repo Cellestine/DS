@@ -1,5 +1,5 @@
 """
-Ce module contient les constantes de configuration utilisées pour le traitement des données.
+Ce module contient les constantes de configuration utilisées pour le traitement des données liées à la fréquence.
 """
 
 CATEGORIAL_COLUMNS = [

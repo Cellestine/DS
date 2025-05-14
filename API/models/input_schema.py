@@ -16,7 +16,7 @@ def get_input_model_freq(api):
         fields.Model: Modèle Swagger décrivant les paramètres attendus.
     """
     return api.model(
-        "Input",
+        "InputFreq",
         {
             "ID": fields.Integer(required=True),
             "TYPERS": fields.Integer(required=True),
@@ -43,8 +43,32 @@ def get_input_model_freq(api):
             "surface_par_batiment": fields.Float(required=True),
             "capital_par_surface": fields.Float(required=True),
             "capital_moyen_par_batiment": fields.Float(required=True),
-            # VARIABLES CATEGORIELLES
-            # déjà traitées dans le pipeline pkl: les insérer à la main seraient lourd sur l'interface et fastidieux
+            # ↓↓↓ Catégorielles ↓↓↓
+            "ACTIVIT2": fields.String(required=True),
+            "VOCATION": fields.String(required=True),
+            "CARACT1": fields.String(required=True),
+            "CARACT3": fields.String(required=True),
+            "CARACT4": fields.String(required=True),
+            "TYPBAT1": fields.String(required=True),
+            "INDEM2": fields.String(required=True),
+            "FRCH1": fields.String(required=True),
+            "FRCH2": fields.String(required=True),
+            "DEROG12": fields.String(required=True),
+            "DEROG13": fields.String(required=True),
+            "DEROG14": fields.String(required=True),
+            "DEROG16": fields.String(required=True),
+            "TAILLE1": fields.String(required=True),
+            "TAILLE2": fields.String(required=True),
+            "COEFASS": fields.String(required=True),
+            "RISK6": fields.String(required=True),
+            "RISK8": fields.String(required=True),
+            "RISK9": fields.String(required=True),
+            "RISK10": fields.String(required=True),
+            "RISK11": fields.String(required=True),
+            "RISK12": fields.String(required=True),
+            "RISK13": fields.String(required=True),
+            "EQUIPEMENT2": fields.String(required=True),
+            "EQUIPEMENT5": fields.String(required=True),
         },
     )
 

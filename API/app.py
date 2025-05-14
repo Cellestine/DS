@@ -1,14 +1,19 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask import Flask
 from flask_restx import Api, Resource
 import pandas as pd
 from models.loader import load_model_freq, load_model_montant
 from models.input_schema import get_input_model_freq, get_input_model_montant
-#from models_pkls.frequence.model_to_pkl import CATEGORIAL_COLUMNS
+from models_pkls.frequence.model_to_pkl import ColumnSelector, MissingValueFiller, ManualCountEncoder, ColumnDropper, ScalerWrapper
 from models.config import CATEGORIAL_COLUMNS
 from models.config_montant import CATEGORICAL_COLUMNS_MONTANT, ORDINAL_COLUMNS_MONTANT
+from flask_cors import CORS
 
 # Init app
 app = Flask(__name__)
+CORS(app)
 api = Api(
     app,
     version="1.0",
@@ -49,8 +54,8 @@ class PredictFreq(Resource):
 
     @ns.expect(input_model_freq)
     def post(self):
-        """Reçoit les données d'entrée, applique le modèle de fréquence et renvoie une prédiction.
-
+        """Reçoit les données d'entrée, applique le modèle de montant et renvoie une prédiction.
+        
         Returns
         -------
         dict
@@ -59,13 +64,38 @@ class PredictFreq(Resource):
         payload = api.payload
         df = pd.DataFrame([payload])
 
-        # Ajout des colonnes catégorielles manquantes avec valeur "Inconnu"
+        # S'assurer que toutes les colonnes catégorielles sont là
+        from models.config import CATEGORIAL_COLUMNS  # <- déjà importé
+
         for col in CATEGORIAL_COLUMNS:
             if col not in df.columns:
                 df[col] = "Inconnu"
+            else:
+                df[col] = df[col].astype(str)
+
+
+        for col in df.columns:
+            if col not in CATEGORIAL_COLUMNS:
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        if "surface_totale" not in df:
+            df["surface_totale"] = df[["SURFACE1", "SURFACE4", "SURFACE10"]].sum(axis=1)
+
+        if "capital_total" not in df:
+            df["capital_total"] = df[["KAPITAL12", "KAPITAL25", "KAPITAL32"]].sum(axis=1)
+
+        if "surface_par_batiment" not in df:
+            df["surface_par_batiment"] = df["surface_totale"] / df["NBBAT1"].replace(0, pd.NA)
+
+        if "capital_par_surface" not in df:
+            df["capital_par_surface"] = df["capital_total"] / df["surface_totale"].replace(0, pd.NA)
+
+        if "capital_moyen_par_batiment" not in df:
+            df["capital_moyen_par_batiment"] = df["capital_total"] / df["NBBAT1"].replace(0, pd.NA)
 
         prediction = model_freq.predict(df)[0]
         return {"prediction": float(prediction)}
+
 
 
 @ns.route("/montant")
@@ -75,7 +105,7 @@ class PredictMontant(Resource):
     @ns.expect(input_model_montant)
     def post(self):
         """Reçoit les données d'entrée, applique le modèle de montant et renvoie une prédiction.
-
+        
         Returns
         -------
         dict
@@ -84,17 +114,20 @@ class PredictMontant(Resource):
         payload = api.payload
         df = pd.DataFrame([payload])
 
-        # Ajout des colonnes catégorielles manquantes avec valeur "Inconnu"
         for col in CATEGORICAL_COLUMNS_MONTANT:
-            df[col] = "Inconnu"  # ou une valeur par défaut raisonnable
+            df[col] = df.get(col, "Inconnu")
+            df[col] = df[col].astype(str)
 
-        # Colonnes ordinales manquantes : -1
         for col in ORDINAL_COLUMNS_MONTANT:
-            if col not in df.columns:
-                df[col] = -1
+            df[col] = pd.to_numeric(df.get(col, -1), errors="coerce")
+
+        for col in df.columns:
+            if col not in CATEGORICAL_COLUMNS_MONTANT and col not in ORDINAL_COLUMNS_MONTANT:
+                df[col] = pd.to_numeric(df[col], errors="coerce")
 
         prediction = model_montant.predict(df)[0]
         return {"prediction": float(prediction)}
+
 
 
 if __name__ == "__main__":

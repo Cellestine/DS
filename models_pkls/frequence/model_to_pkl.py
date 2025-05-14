@@ -1,3 +1,4 @@
+import os
 import joblib
 import pandas as pd
 import numpy as np
@@ -74,7 +75,10 @@ class ManualCountEncoder(BaseEstimator, TransformerMixin):
     def transform(self, X):
         X_copy = X.copy()
         for col in self.cat_cols:
-            X_copy[col] = X_copy[col].map(self.count_maps[col]).fillna(0)
+            if col in X_copy.columns:
+                X_copy[col] = X_copy[col].map(self.count_maps.get(col, {})).fillna(0)
+            else:
+                X_copy[col] = 0
         return X_copy
 
 
@@ -443,7 +447,9 @@ ALL_COLUMNS = NUMERICAL_COLUMNS + CATEGORIAL_COLUMNS
 # Chargement du modèle entraîné
 # ——————————————————————————————————————
 
-model = joblib.load("xgb_regressor_model.pkl")
+current_dir = os.path.dirname(__file__)
+model_path = os.path.join(current_dir, "xgb_regressor_model.pkl")
+model = joblib.load(model_path)
 
 # ——————————————————————————————————————
 # Construction du pipeline complet
