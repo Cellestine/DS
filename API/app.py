@@ -6,7 +6,7 @@ from flask import Flask
 from flask_restx import Api, Resource
 import pandas as pd
 from models.loader import load_model_freq, load_model_montant
-from models.input_schema import get_input_model_charge, get_input_model_freq, get_input_model_montant
+from models.input_schema import get_input_model_charge, get_input_model_charge_bis, get_input_model_freq, get_input_model_montant
 from models_pkls.frequence.model_to_pkl import ColumnSelector, MissingValueFiller, ManualCountEncoder, ColumnDropper, ScalerWrapper
 from models.config import CATEGORIAL_COLUMNS
 from models.config_montant import CATEGORICAL_COLUMNS_MONTANT, ORDINAL_COLUMNS_MONTANT
@@ -31,6 +31,7 @@ model_montant = load_model_montant()
 input_model_freq = get_input_model_freq(api)
 input_model_montant = get_input_model_montant(api)
 input_model_charge = get_input_model_charge(api)
+input_model_charge_bis = get_input_model_charge_bis(api)
 
 
 @api.route("/health")
@@ -147,6 +148,40 @@ class PredictCharges(Resource):
         charges = data["frequence"] * data["montant"] * data["annee_survenance"]
         return {"charge": float(charges)}
 
+@ns.route("/charge_bis")
+class PredictCharges(Resource):
+    """Endpoint pour prédire la charge."""
+
+    @ns.expect(input_model_charge_bis)
+    def post(self):
+        """Reçoit les données d'entrée, applique les modèles de prédictions freq et montant. Puis applique la formule de calcul de la charge et renvoie le résultat.
+        
+        Returns
+        -------
+        dict
+            La charge.
+        """
+        payload = api.payload
+        df = pd.DataFrame([payload])
+
+        # Ajout des colonnes manquantes pour les 2 modèles
+        for col in CATEGORIAL_COLUMNS:
+            if col not in df.columns:
+                df[col] = "Inconnu"
+
+        # Prédictions
+        freq = model_freq.predict(df)[0]
+        montant = model_montant.predict(df)[0]
+        annee = df["annee_survenance"].values[0]
+
+        charge = freq * montant * annee
+
+        return {
+            "frequence": float(freq),
+            "montant": float(montant),
+            "annee_survenance": float(annee),
+            "charge": float(charge)
+        }
 
 
 if __name__ == "__main__":

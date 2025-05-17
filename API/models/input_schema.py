@@ -203,3 +203,19 @@ def get_input_model_charge(api):
             "annee_survenance": fields.Float(required=True)
     },
     )
+
+def get_input_model_charge_bis(api):
+    input_model_freq = get_input_model_freq(api)
+    input_model_montant = get_input_model_montant(api)
+
+    freq_fields = dict(api.models[input_model_freq.name].clone("freq_clone").items())
+    montant_fields = dict(api.models[input_model_montant.name].clone("montant_clone").items())
+
+    return api.model(
+        "InputCharge",
+        {
+            "annee_survenance": fields.Float(required=True),
+            **freq_fields,
+            **montant_fields,
+        }
+    )
