@@ -1,3 +1,4 @@
+from flask_restx import fields
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -5,7 +6,7 @@ from flask import Flask
 from flask_restx import Api, Resource
 import pandas as pd
 from models.loader import load_model_freq, load_model_montant
-from models.input_schema import get_input_model_freq, get_input_model_montant
+from models.input_schema import get_input_model_charge, get_input_model_freq, get_input_model_montant
 from models_pkls.frequence.model_to_pkl import ColumnSelector, MissingValueFiller, ManualCountEncoder, ColumnDropper, ScalerWrapper
 from models.config import CATEGORIAL_COLUMNS
 from models.config_montant import CATEGORICAL_COLUMNS_MONTANT, ORDINAL_COLUMNS_MONTANT
@@ -29,6 +30,7 @@ model_montant = load_model_montant()
 # Charger schémas Swagger
 input_model_freq = get_input_model_freq(api)
 input_model_montant = get_input_model_montant(api)
+input_model_charge = get_input_model_charge(api)
 
 
 @api.route("/health")
@@ -127,6 +129,23 @@ class PredictMontant(Resource):
 
         prediction = model_montant.predict(df)[0]
         return {"prediction": float(prediction)}
+
+@ns.route("/charge")
+class PredictCharges(Resource):
+    """Endpoint pour prédire la charge."""
+
+    @ns.expect(input_model_charge)
+    def post(self):
+        """Reçoit les données d'entrée, applique la formule de calcul pour la charge et renvoie le résultat.
+        
+        Returns
+        -------
+        dict
+            La charge.
+        """
+        data = api.payload
+        charges = data["frequence"] * data["montant"] * data["annee_survenance"]
+        return {"charge": float(charges)}
 
 
 

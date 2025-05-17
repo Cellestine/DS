@@ -193,3 +193,13 @@ def get_input_model_montant(api):
             "ZONE_VENT": fields.Float(required=True),
         },
     )
+
+def get_input_model_charge(api):
+    return api.model(
+        "InputCharge",
+        {   
+            "frequence": fields.Float(required=True),
+            "montant": fields.Float(required=True),
+            "annee_survenance": fields.Float(required=True)
+    },
+    )
