@@ -1,7 +1,7 @@
 from flask_restx import fields
 
 
-def get_input_model_freq(api):
+def get_input_model_freq(api): 
     """
     Déclare le modèle d'entrée Swagger pour la prédiction de fréquence d'incendie.
 

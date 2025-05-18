@@ -103,33 +103,49 @@ class PredictFreq(Resource):
 
 @ns.route("/montant")
 class PredictMontant(Resource):
-    """Endpoint pour prédire le montant d'indemnisation."""
 
     @ns.expect(input_model_montant)
     def post(self):
-        """Reçoit les données d'entrée, applique le modèle de montant et renvoie une prédiction.
-        
-        Returns
-        -------
-        dict
-            La prédiction de montant.
-        """
         payload = api.payload
         df = pd.DataFrame([payload])
 
+        # 1) on crée ou on complète TOUTES les colonnes catégorielles
         for col in CATEGORICAL_COLUMNS_MONTANT:
-            df[col] = df.get(col, "Inconnu")
-            df[col] = df[col].astype(str)
+            if col not in df.columns:
+                # broadcast : df[col] devient une Series de "Inconnu"
+                df[col] = "Inconnu"
+            # ensuite on caste la Series complète en catégorie
+            df[col] = df[col].astype("category")
 
+        # 1.2) ordinales
         for col in ORDINAL_COLUMNS_MONTANT:
             df[col] = pd.to_numeric(df.get(col, -1), errors="coerce")
 
+        # 1.3) tout le reste en numérique
         for col in df.columns:
             if col not in CATEGORICAL_COLUMNS_MONTANT and col not in ORDINAL_COLUMNS_MONTANT:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
 
-        prediction = model_montant.predict(df)[0]
-        return {"prediction": float(prediction)}
+        # 2) on récupère la liste exacte des features que le booster attend
+        booster = model_montant.get_booster()  # si c’est un XGBRegressor sklearn
+        expected_feats = booster.feature_names
+
+        # 3) on ajoute toutes les colonnes manquantes avec une valeur par défaut
+        for feat in expected_feats:
+            if feat not in df.columns:
+                if feat in CATEGORICAL_COLUMNS_MONTANT:
+                    df[feat] = "Inconnu"
+                else:
+                    # pour les ordinales ou numériques, on peut mettre -1 ou 0
+                    df[feat] = -1
+
+        # 4) enfin, on réordonne le df pour coller strictement à expected_feats
+        df = df[expected_feats]
+
+        # 5) prédiction sans plus d’erreur de feature_names
+        pred = model_montant.predict(df)[0]
+        return {"prediction": float(pred)}
+
 
 @ns.route("/charge")
 class PredictCharges(Resource):
