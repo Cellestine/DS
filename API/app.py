@@ -148,57 +148,68 @@ class PredictMontant(Resource):
 
 
 @ns.route("/charge")
-class PredictCharges(Resource):
-    """Endpoint pour prédire la charge."""
-
-    @ns.expect(input_model_charge)
-    def post(self):
-        """Reçoit les données d'entrée, applique la formule de calcul pour la charge et renvoie le résultat.
-        
-        Returns
-        -------
-        dict
-            La charge.
-        """
-        data = api.payload
-        charges = data["frequence"] * data["montant"] * data["annee_survenance"]
-        return {"charge": float(charges)}
-
-@ns.route("/charge_bis")
-class PredictCharges(Resource):
-    """Endpoint pour prédire la charge."""
-
+class PredictChargeBis(Resource):
     @ns.expect(input_model_charge_bis)
     def post(self):
-        """Reçoit les données d'entrée, applique les modèles de prédictions freq et montant. Puis applique la formule de calcul de la charge et renvoie le résultat.
-        
-        Returns
-        -------
-        dict
-            La charge.
-        """
-        payload = api.payload
+        payload = api.payload 
         df = pd.DataFrame([payload])
 
-        # Ajout des colonnes manquantes pour les 2 modèles
+        # --- 1) Prépa pour freq (caté + num) ---
         for col in CATEGORIAL_COLUMNS:
             if col not in df.columns:
                 df[col] = "Inconnu"
+            # maintenant df[col] est une Series, on peut caster
+            df[col] = df[col].astype(str)
+        for col in df.columns:
+            if col not in CATEGORIAL_COLUMNS:
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+        # mêmes calculs dérivés que dans /freq
+        if "surface_totale" not in df:
+            df["surface_totale"] = df[["SURFACE1","SURFACE4","SURFACE10"]].sum(axis=1)
+        if "capital_total" not in df:
+            df["capital_total"] = df[["KAPITAL12","KAPITAL25","KAPITAL32"]].sum(axis=1)
+        if "surface_par_batiment" not in df:
+            df["surface_par_batiment"] = df["surface_totale"]/df["NBBAT1"].replace(0,pd.NA)
+        if "capital_par_surface" not in df:
+            df["capital_par_surface"] = df["capital_total"]/df["surface_totale"].replace(0,pd.NA)
+        if "capital_moyen_par_batiment" not in df:
+            df["capital_moyen_par_batiment"] = df["capital_total"]/df["NBBAT1"].replace(0,pd.NA)
 
-        # Prédictions
-        freq = model_freq.predict(df)[0]
-        montant = model_montant.predict(df)[0]
-        annee = df["annee_survenance"].values[0]
+        # clone pour montant
+        df_mont = df.copy()
 
-        charge = freq * montant * annee
+        # --- 2) Prépa pour montant (caté en category + ord + num) ---
+        for col in CATEGORICAL_COLUMNS_MONTANT:
+            if col not in df_mont.columns:
+                df_mont[col] = "Inconnu"
+            df_mont[col] = df_mont[col].astype("category")
+        for col in ORDINAL_COLUMNS_MONTANT:
+            df_mont[col] = pd.to_numeric(df_mont.get(col, -1), errors="coerce")
+        for col in df_mont.columns:
+            if col not in CATEGORICAL_COLUMNS_MONTANT and col not in ORDINAL_COLUMNS_MONTANT:
+                df_mont[col] = pd.to_numeric(df_mont[col], errors="coerce")
+
+        # réaligner sur les features XGBoost du montant
+        booster = model_montant.get_booster()
+        feats = booster.feature_names
+        for feat in feats:
+            if feat not in df_mont.columns:
+                df_mont[feat] = -1
+        df_mont = df_mont[feats]
+
+        # --- 3) Prédictions & calcul de la charge ---
+        freq_pred    = model_freq.predict(df)[0]
+        montant_pred = model_montant.predict(df_mont)[0]
+        annee        = float(df["annee_survenance"].iat[0])
+
+        charge = freq_pred * montant_pred * annee
 
         return {
-            "frequence": float(freq),
-            "montant": float(montant),
-            "annee_survenance": float(annee),
-            "charge": float(charge)
+            "frequence":        float(freq_pred),
+            "montant":         float(montant_pred),
+            "annee_survenance":  annee,
+            "charge":          float(charge)
         }
-
 
 if __name__ == "__main__":
     app.run(debug=True)
