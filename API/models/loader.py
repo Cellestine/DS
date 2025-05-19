@@ -2,7 +2,7 @@ import joblib
 
 
 # Chargement des modèles XGBoost
-def load_model_freq(path=r"new_full_model_pipeline.pkl"):
+def load_model_freq(path=r"models_pkls/frequence/new_full_model_pipeline.pkl"):
     """
     Charge le modèle de prédiction de la fréquence des sinistres depuis le fichier spécifié.
 

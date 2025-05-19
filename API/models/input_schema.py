@@ -195,16 +195,25 @@ def get_input_model_montant(api):
     )
 
 def get_input_model_charge(api):
-    return api.model(
-        "InputCharge",
-        {   
-            "frequence": fields.Float(required=True),
-            "montant": fields.Float(required=True),
-            "annee_survenance": fields.Float(required=True)
-    },
-    )
+    """
+    Construit et retourne le modèle Swagger (OpenAPI) pour l'endpoint de prédiction de la charge.
 
-def get_input_model_charge_bis(api):
+    Ce modèle fusionne les champs requis pour les prédictions de fréquence et de montant,
+    et y ajoute un champ supplémentaire spécifique à la charge : `annee_survenance`.
+
+    Paramètres
+    ----------
+    api : flask_restx.Api
+        L'instance de l'API Flask-RestX utilisée pour déclarer le modèle.
+
+    Retours
+    -------
+    Model
+        Un modèle Flask-RestX combiné, nommé "InputCharge", contenant :
+            - les champs requis pour la prédiction de fréquence,
+            - les champs requis pour la prédiction de montant,
+            - le champ `annee_survenance` de type float.
+    """
     input_model_freq = get_input_model_freq(api)
     input_model_montant = get_input_model_montant(api)
 

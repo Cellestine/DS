@@ -6,7 +6,7 @@ from flask import Flask
 from flask_restx import Api, Resource
 import pandas as pd
 from models.loader import load_model_freq, load_model_montant
-from models.input_schema import get_input_model_charge, get_input_model_charge_bis, get_input_model_freq, get_input_model_montant
+from models.input_schema import get_input_model_charge, get_input_model_freq, get_input_model_montant
 from models_pkls.frequence.model_to_pkl import ColumnSelector, MissingValueFiller, ManualCountEncoder, ColumnDropper, ScalerWrapper
 from models.config import CATEGORIAL_COLUMNS
 from models.config_montant import CATEGORICAL_COLUMNS_MONTANT, ORDINAL_COLUMNS_MONTANT
@@ -31,7 +31,7 @@ model_montant = load_model_montant()
 input_model_freq = get_input_model_freq(api)
 input_model_montant = get_input_model_montant(api)
 input_model_charge = get_input_model_charge(api)
-input_model_charge_bis = get_input_model_charge_bis(api)
+input_model_charge_bis = get_input_model_charge(api)
 
 
 @api.route("/health")
@@ -57,7 +57,7 @@ class PredictFreq(Resource):
 
     @ns.expect(input_model_freq)
     def post(self):
-        """Reçoit les données d'entrée, applique le modèle de montant et renvoie une prédiction.
+        """Reçoit les données d'entrée, applique le modèle de fréquence et renvoie une prédiction.
         
         Returns
         -------
@@ -103,9 +103,17 @@ class PredictFreq(Resource):
 
 @ns.route("/montant")
 class PredictMontant(Resource):
+    """Endpoint pour prédire le montant."""
 
     @ns.expect(input_model_montant)
     def post(self):
+        """Reçoit les données d'entrée, applique le modèle de montant et renvoie une prédiction.
+        
+        Returns
+        -------
+        dict
+            La prédiction du montant.
+        """
         payload = api.payload
         df = pd.DataFrame([payload])
 
@@ -149,8 +157,17 @@ class PredictMontant(Resource):
 
 @ns.route("/charge")
 class PredictChargeBis(Resource):
-    @ns.expect(input_model_charge_bis)
+    """Endpoint pour prédire la charge."""
+
+    @ns.expect(input_model_charge)
     def post(self):
+        """Reçoit les données d'entrée, applique les modèles de montant, de fréquence et renvoie une prédiction.
+        
+        Returns
+        -------
+        dict
+            La prédiction de la charge.
+        """
         payload = api.payload 
         df = pd.DataFrame([payload])
 
