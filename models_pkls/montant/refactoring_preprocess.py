@@ -4,7 +4,7 @@ Refactoring du code de prétraitement pour le rendre plus modulaire et réutilis
 
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from old.config import ORDINAL_COLUMNS, CATEGORICAL_COLUMNS, NUMERIC_COLUMNS
+from API.models.config_montant import ORDINAL_COLUMNS_MONTANT, CATEGORICAL_COLUMNS_MONTANT, NUMERIC_COLUMNS_MONTANT
 
 
 class OrdinalEncoderByTargetFrequency(BaseEstimator, TransformerMixin):
@@ -31,7 +31,7 @@ class OrdinalEncoderByTargetFrequency(BaseEstimator, TransformerMixin):
         df[self.target_col] = y_data[self.target_col].values
         df[self.id_col] = y_data[self.id_col].values
 
-        for col in ORDINAL_COLUMNS:
+        for col in ORDINAL_COLUMNS_MONTANT:
             if col in df.columns:
                 freq = df.groupby(col)[self.target_col].sum()
                 sorted_values = freq.sort_values().index
@@ -75,7 +75,7 @@ class CategoricalEncoderByTargetFrequency(BaseEstimator, TransformerMixin):
         df[self.target_col] = y[self.target_col].values
         df[self.id_col] = y[self.id_col].values
 
-        for col in CATEGORICAL_COLUMNS:
+        for col in CATEGORICAL_COLUMNS_MONTANT:
             if col in df.columns:
                 freq = df.groupby(col)[self.target_col].sum()
                 sorted_values = freq.sort_values().index
@@ -101,7 +101,7 @@ class NumericConverter(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self):
-        self.columns = list(NUMERIC_COLUMNS)
+        self.columns = list(NUMERIC_COLUMNS_MONTANT)
 
     def fit(self, x_data):
         """

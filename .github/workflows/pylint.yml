@@ -36,4 +36,5 @@ jobs:
 
       - name: Run Unit Tests
         run: |
-          python tests/tests_unitaires.py
+          python tests/tests_unitaires_montant.py
+          python tests/tests_unitaires_frequence.py
