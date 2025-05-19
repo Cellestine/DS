@@ -473,5 +473,5 @@ pipeline = Pipeline(
 # Sauvegarde finale du pipeline
 # ——————————————————————————————————————
 
-joblib.dump(pipeline, "models_pkls/frequence/full_model_pipeline.pkl")
+joblib.dump(pipeline, r"models_pkls/frequence/full_model_pipeline.pkl")
 print("✅ Pipeline complet sauvegardé sous full_model_pipeline.pkl")

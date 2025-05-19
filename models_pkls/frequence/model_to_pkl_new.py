@@ -54,6 +54,21 @@ for col in NUMERICAL_COLUMNS:
 # Définition des classes custom
 # ---------------------------------------------
 class ColumnSelector(BaseEstimator, TransformerMixin):
+    """
+    Sélectionne un sous-ensemble de colonnes d'un DataFrame.
+
+    Paramètres
+    ----------
+    selected_columns : list of str
+        Liste des noms de colonnes à conserver dans le DataFrame.
+
+    Méthodes
+    --------
+    fit(X, y=None)
+        Méthode d'ajustement (inutile ici, renvoie self).
+    transform(X)
+        Retourne un DataFrame ne contenant que les colonnes sélectionnées.
+    """
     def __init__(self, selected_columns):
         self.selected_columns = selected_columns
 
@@ -65,6 +80,25 @@ class ColumnSelector(BaseEstimator, TransformerMixin):
 
 
 class MissingValueFiller(BaseEstimator, TransformerMixin):
+    """
+    Remplit les valeurs manquantes :
+    - avec 0 pour les colonnes numériques,
+    - avec 'Inconnu' pour les colonnes catégorielles.
+
+    Paramètres
+    ----------
+    num_cols : list of str, optional
+        Noms des colonnes numériques.
+    cat_cols : list of str, optional
+        Noms des colonnes catégorielles.
+
+    Méthodes
+    --------
+    fit(X, y=None)
+        Renvoie self sans modification.
+    transform(X)
+        Remplit les NaN selon le type des colonnes.
+    """
     def __init__(self, num_cols=None, cat_cols=None):
         self.num_cols = num_cols
         self.cat_cols = cat_cols
@@ -86,6 +120,21 @@ class MissingValueFiller(BaseEstimator, TransformerMixin):
 
 
 class ManualCountEncoder(BaseEstimator, TransformerMixin):
+    """
+    Encode les variables catégorielles avec leur fréquence d'apparition (count encoding).
+
+    Paramètres
+    ----------
+    cat_cols : list of str
+        Liste des colonnes catégorielles à encoder.
+
+    Méthodes
+    --------
+    fit(X, y=None)
+        Calcule les fréquences des catégories dans chaque colonne.
+    transform(X)
+        Applique le mapping de fréquence à chaque colonne catégorielle.
+    """
     def __init__(self, cat_cols=None):
         self.cat_cols = cat_cols
         self.count_maps = {}
@@ -107,6 +156,30 @@ class ManualCountEncoder(BaseEstimator, TransformerMixin):
 
 
 class ColumnDropper(BaseEstimator, TransformerMixin):
+    """
+    Supprime les colonnes peu informatives :
+    - trop de valeurs manquantes,
+    - faible variance,
+    - forte corrélation avec d'autres colonnes.
+
+    Paramètres
+    ----------
+    num_cols : list of str
+        Colonnes numériques à vérifier pour la variance/corrélation.
+    missing_thresh : float, default=0.4
+        Seuil au-delà duquel une colonne est supprimée pour taux de valeurs manquantes.
+    var_thresh : float, default=0.01
+        Seuil minimum de variance.
+    corr_thresh : float, default=0.95
+        Seuil maximum de corrélation autorisée entre colonnes numériques.
+
+    Méthodes
+    --------
+    fit(X, y=None)
+        Identifie les colonnes à supprimer.
+    transform(X)
+        Supprime les colonnes identifiées.
+    """
     def __init__(self, num_cols=None, missing_thresh=0.4, var_thresh=0.01, corr_thresh=0.95):
         self.num_cols = num_cols
         self.missing_thresh = missing_thresh
@@ -143,6 +216,21 @@ class ColumnDropper(BaseEstimator, TransformerMixin):
 
 
 class ScalerWrapper(BaseEstimator, TransformerMixin):
+    """
+    Applique une standardisation (z-score) aux colonnes numériques sélectionnées.
+
+    Paramètres
+    ----------
+    num_cols : list of str
+        Colonnes à normaliser.
+
+    Méthodes
+    --------
+    fit(X, y=None)
+        Calcule les statistiques de normalisation.
+    transform(X)
+        Applique la transformation standardisée.
+    """
     def __init__(self, num_cols=None):
         self.num_cols = num_cols
         self.scaler = StandardScaler()
@@ -184,6 +272,7 @@ full_pipeline = Pipeline([
     ("model", model)
 ])
 
+
 # 🔁 Prédiction sur les 10 premières lignes du test
 print("✅ Prédictions effectuées avec succès sur les 10 premières lignes du test.")
 for i, x in enumerate(X_test.iloc[:10].to_dict(orient="records"), 1):
@@ -192,5 +281,5 @@ for i, x in enumerate(X_test.iloc[:10].to_dict(orient="records"), 1):
     print(f"Prédiction {i}: {round(prediction, 2)}")
 
 
-joblib.dump(full_pipeline, "new_full_model_pipeline.pkl")
+joblib.dump(full_pipeline, r"models_pkls/frequence/new_full_model_pipeline.pkl")
 print("✅ Nouveau pipeline sauvegardé sous new_full_model_pipeline.pkl")
