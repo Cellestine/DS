@@ -4,9 +4,11 @@ Ce module contient des tests unitaires pour les fonctions du module preprocess :
 - encode_categorical_by_target_frequency
 - convert_to_numeric
 """
+
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import unittest
 import pandas as pd
@@ -14,9 +16,9 @@ from pandas.testing import assert_series_equal
 from models_pkls.montant import preprocess
 
 # Surcharge les colonnes utilisées pour les tests
-preprocess.ORDINAL_COLUMNS_MONTANT = ['grade']
-preprocess.CATEGORICAL_COLUMNS_MONTANT = ['type']
-preprocess.NUMERIC_COLUMNS_MONTANT = ['amount']
+preprocess.ORDINAL_COLUMNS_MONTANT = ["grade"]
+preprocess.CATEGORICAL_COLUMNS_MONTANT = ["type"]
+preprocess.NUMERIC_COLUMNS_MONTANT = ["amount"]
 
 
 class TestPreprocessing(unittest.TestCase):
@@ -28,17 +30,16 @@ class TestPreprocessing(unittest.TestCase):
     """
 
     def setUp(self):
-        self.x_data = pd.DataFrame({
-            'ID': [1, 2, 3],
-            'grade': ['B', 'A', 'C'],
-            'type': ['cat1', 'cat2', 'cat1'],
-            'amount': ['10', 'invalid', '30']
-        })
+        self.x_data = pd.DataFrame(
+            {
+                "ID": [1, 2, 3],
+                "grade": ["B", "A", "C"],
+                "type": ["cat1", "cat2", "cat1"],
+                "amount": ["10", "invalid", "30"],
+            }
+        )
 
-        self.y = pd.DataFrame({
-            'ID': [1, 2, 3],
-            'FREQ': [5, 10, 1]
-        })
+        self.y = pd.DataFrame({"ID": [1, 2, 3], "FREQ": [5, 10, 1]})
 
     def test_encode_ordinal_by_target_frequency(self):
         """
@@ -47,7 +48,7 @@ class TestPreprocessing(unittest.TestCase):
         result = preprocess.encode_ordinal_by_target_frequency(self.x_data.copy(), self.y)
         # FREQ par grade : A=10, B=5, C=1 ⇒ trié : C (0), B (1), A (2)
         expected = [1, 2, 0]  # B, A, C
-        self.assertListEqual(result['grade'].tolist(), expected)
+        self.assertListEqual(result["grade"].tolist(), expected)
 
     def test_encode_categorical_by_target_frequency(self):
         """
@@ -56,16 +57,16 @@ class TestPreprocessing(unittest.TestCase):
         result = preprocess.encode_categorical_by_target_frequency(self.x_data.copy(), self.y)
         # FREQ par type : cat1 = 5 + 1 = 6, cat2 = 10 ⇒ trié : cat1 (0), cat2 (1)
         expected = [0, 1, 0]
-        self.assertListEqual(result['type'].tolist(), expected)
+        self.assertListEqual(result["type"].tolist(), expected)
 
     def test_convert_to_numeric(self):
         """
         Teste la conversion des colonnes numériques en types numériques.
         """
         result = preprocess.convert_to_numeric(self.x_data.copy())
-        expected = pd.Series([10.0, float('nan'), 30.0], name='amount', dtype='float64')
-        assert_series_equal(result['amount'], expected, check_dtype=False)
+        expected = pd.Series([10.0, float("nan"), 30.0], name="amount", dtype="float64")
+        assert_series_equal(result["amount"], expected, check_dtype=False)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

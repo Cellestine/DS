@@ -4,7 +4,11 @@ Refactoring du code de prétraitement pour le rendre plus modulaire et réutilis
 
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from API.models.config_montant import ORDINAL_COLUMNS_MONTANT, CATEGORICAL_COLUMNS_MONTANT, NUMERIC_COLUMNS_MONTANT
+from API.models.config_montant import (
+    ORDINAL_COLUMNS_MONTANT,
+    CATEGORICAL_COLUMNS_MONTANT,
+    NUMERIC_COLUMNS_MONTANT,
+)
 
 
 class OrdinalEncoderByTargetFrequency(BaseEstimator, TransformerMixin):
@@ -35,9 +39,7 @@ class OrdinalEncoderByTargetFrequency(BaseEstimator, TransformerMixin):
             if col in df.columns:
                 freq = df.groupby(col)[self.target_col].sum()
                 sorted_values = freq.sort_values().index
-                self.encoding_maps[col] = {
-                    val: i for i, val in enumerate(sorted_values)
-                }
+                self.encoding_maps[col] = {val: i for i, val in enumerate(sorted_values)}
         return self
 
     def transform(self, x_data):
@@ -79,9 +81,7 @@ class CategoricalEncoderByTargetFrequency(BaseEstimator, TransformerMixin):
             if col in df.columns:
                 freq = df.groupby(col)[self.target_col].sum()
                 sorted_values = freq.sort_values().index
-                self.encoding_maps[col] = {
-                    val: i for i, val in enumerate(sorted_values)
-                }
+                self.encoding_maps[col] = {val: i for i, val in enumerate(sorted_values)}
         return self
 
     def transform(self, x_data):

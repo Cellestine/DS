@@ -29,7 +29,7 @@ def load_model_montant(path=r"models_pkls/montant/xgb_model (2).pkl"):
     Returns:
         model: Modèle entraîné chargé avec joblib.
     """
-    model= joblib.load(path)
+    model = joblib.load(path)
     # si c'est un XGBRegressor sklearn, on lui dit qu'il doit traiter
     # les catégories nativement :
     try:
@@ -37,4 +37,3 @@ def load_model_montant(path=r"models_pkls/montant/xgb_model (2).pkl"):
     except AttributeError:
         pass
     return model
-

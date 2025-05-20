@@ -1,6 +1,7 @@
 """
 Tests unitaires pour la frequence.
 """
+
 import sys
 import os
 
@@ -41,12 +42,8 @@ class TestFactorizedFunctions:
         df1 = pd.DataFrame({"num": [1, "a"], "cat": ["a", None]})
         df2 = pd.DataFrame({"num": [np.nan, 2], "cat": [None, "b"]})
         num_cols, cat_cols = ["num"], ["cat"]
-        filled_df1, filled_df2 = ff.fill_missing_values(
-            df1.copy(), df2.copy(), num_cols, cat_cols
-        )
-        assert (
-            filled_df1["num"].iloc[1] == 0
-        )  # 'a' should be coerced to NaN and then replaced by 0
+        filled_df1, filled_df2 = ff.fill_missing_values(df1.copy(), df2.copy(), num_cols, cat_cols)
+        assert filled_df1["num"].iloc[1] == 0  # 'a' should be coerced to NaN and then replaced by 0
         assert filled_df2["cat"].iloc[0] == "Inconnu"
         self.success_count += 1
         print("✅ test_fill_missing_values_with_invalid_data passed")
@@ -57,9 +54,7 @@ class TestFactorizedFunctions:
         """
         df1 = pd.DataFrame({"A": ["x", "y", "x"]})
         df2 = pd.DataFrame({"A": ["y", "x"]})
-        df1_encoded, df2_encoded = ff.encode_categorical_features(
-            df1.copy(), df2.copy(), ["A"]
-        )
+        df1_encoded, df2_encoded = ff.encode_categorical_features(df1.copy(), df2.copy(), ["A"])
         assert df1_encoded.shape == df1.shape
         assert df2_encoded.shape == df2.shape
         self.success_count += 1

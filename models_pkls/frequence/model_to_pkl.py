@@ -90,9 +90,7 @@ class ColumnDropper(BaseEstimator, TransformerMixin):
     - Forte corrélation
     """
 
-    def __init__(
-        self, num_cols=None, missing_thresh=0.4, var_thresh=0.01, corr_thresh=0.95
-    ):
+    def __init__(self, num_cols=None, missing_thresh=0.4, var_thresh=0.01, corr_thresh=0.95):
         self.num_cols = num_cols
         self.missing_thresh = missing_thresh
         self.var_thresh = var_thresh
@@ -116,9 +114,7 @@ class ColumnDropper(BaseEstimator, TransformerMixin):
         drop_cols += low_var_cols
 
         corr_matrix = X_copy.select_dtypes(include=["number"]).corr().abs()
-        upper_tri = corr_matrix.where(
-            np.triu(np.ones(corr_matrix.shape), k=1).astype(bool)
-        )
+        upper_tri = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
         high_corr_cols = [
             col for col in upper_tri.columns if any(upper_tri[col] > self.corr_thresh)
         ]
