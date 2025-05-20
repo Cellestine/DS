@@ -16,7 +16,7 @@ from models.input_schema import (
     get_input_model_freq,
     get_input_model_montant,
 )
-from models_pkls.frequence.model_to_pkl import (
+from models_pkls.frequence.model_to_pkl_new import (
     ColumnSelector,
     MissingValueFiller,
     ManualCountEncoder,

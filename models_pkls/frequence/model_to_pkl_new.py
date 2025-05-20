@@ -14,9 +14,9 @@ from xgboost import XGBRegressor
 # ---------------------------------------------
 # Chargement des fichiers
 # ---------------------------------------------
-X_train = pd.read_csv("train_input_Z61KlZo (1).csv", low_memory=False)
-y_train = pd.read_csv("train_output_DzPxaPY (1).csv")["FREQ"]
-X_test = pd.read_csv("test_input_5qJzHrr.csv", low_memory=False)
+X_train = pd.read_csv("train_input_Z61KlZo 1.csv", low_memory=False)
+y_train = pd.read_csv("train_output_DzPxaPY 1.csv")["FREQ"]
+X_test = pd.read_csv("test_input_5qJzHrr 1.csv", low_memory=False)
 
 # ---------------------------------------------
 # Colonnes (issues de config)
