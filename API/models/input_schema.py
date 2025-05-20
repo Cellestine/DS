@@ -1,10 +1,11 @@
 """
 Ce module contient les fonctions permettant d'inserer les inputs JSON.
 """
+
 from flask_restx import fields
 
 
-def get_input_model_freq(api): 
+def get_input_model_freq(api):
     """
     Déclare le modèle d'entrée Swagger pour la prédiction de fréquence d'incendie.
 
@@ -197,6 +198,7 @@ def get_input_model_montant(api):
         },
     )
 
+
 def get_input_model_charge(api):
     """
     Construit et retourne le modèle Swagger (OpenAPI) pour l'endpoint de prédiction de la charge.
@@ -229,5 +231,5 @@ def get_input_model_charge(api):
             "annee_survenance": fields.Float(required=True),
             **freq_fields,
             **montant_fields,
-        }
+        },
     )

@@ -6,8 +6,11 @@ de la variable cible.
 """
 
 import pandas as pd
-from API.models.config_montant import ORDINAL_COLUMNS_MONTANT, CATEGORICAL_COLUMNS_MONTANT, NUMERIC_COLUMNS_MONTANT
-
+from API.models.config_montant import (
+    ORDINAL_COLUMNS_MONTANT,
+    CATEGORICAL_COLUMNS_MONTANT,
+    NUMERIC_COLUMNS_MONTANT,
+)
 
 
 def encode_ordinal_by_target_frequency(x_data, y_data):
@@ -23,11 +26,11 @@ def encode_ordinal_by_target_frequency(x_data, y_data):
     - X_encoded : pd.DataFrame, DataFrame X avec les colonnes ordinales encodées
     """
 
-    target_name = 'FREQ'
+    target_name = "FREQ"
     x_encoded = x_data.copy()
 
     # Fusionner X et y sur la colonne 'ID'
-    merged = pd.merge(x_encoded, y_data, on='ID')
+    merged = pd.merge(x_encoded, y_data, on="ID")
 
     for col in ORDINAL_COLUMNS_MONTANT:
         if col in x_encoded.columns:
@@ -46,7 +49,6 @@ def encode_ordinal_by_target_frequency(x_data, y_data):
     return x_encoded
 
 
-
 def encode_categorical_by_target_frequency(x_data, y_data):
     """
     Encode les colonnes catégorielles en fonction de la fréquence de la variable cible.
@@ -60,12 +62,12 @@ def encode_categorical_by_target_frequency(x_data, y_data):
     - X_encoded : pd.DataFrame, DataFrame X avec les colonnes catégorielles encodées
     """
 
-    target_name = 'FREQ'
+    target_name = "FREQ"
 
     x_encoded = x_data.copy()
 
     # Fusionner X et y selon la colonne 'ID'
-    merged = pd.merge(x_encoded, y_data, left_on='ID', right_on='ID')
+    merged = pd.merge(x_encoded, y_data, left_on="ID", right_on="ID")
 
     for col in CATEGORICAL_COLUMNS_MONTANT:
         if col in x_encoded.columns:
@@ -84,7 +86,6 @@ def encode_categorical_by_target_frequency(x_data, y_data):
     return x_encoded
 
 
-
 def convert_to_numeric(x_data):
     """
     Convertit les colonnes numériques spécifiées en types numériques.
@@ -99,7 +100,6 @@ def convert_to_numeric(x_data):
     cols_to_convert = [col for col in NUMERIC_COLUMNS_MONTANT if col in x_data.columns]
 
     # Appliquer la conversion uniquement sur les colonnes présentes
-    x_data[cols_to_convert] = x_data[cols_to_convert].apply(pd.to_numeric, errors='coerce')
-
+    x_data[cols_to_convert] = x_data[cols_to_convert].apply(pd.to_numeric, errors="coerce")
 
     return x_data

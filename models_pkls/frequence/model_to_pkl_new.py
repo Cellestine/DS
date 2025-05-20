@@ -1,6 +1,7 @@
 """
 Refactoring du code de prétraitement pour le rendre plus modulaire et réutilisable.
 """
+
 import os
 import joblib
 import pandas as pd
@@ -21,27 +22,72 @@ X_test = pd.read_csv("test_input_5qJzHrr.csv", low_memory=False)
 # Colonnes (issues de config)
 # ---------------------------------------------
 NUMERICAL_COLUMNS = [
-    "ID", "TYPERS", "ANCIENNETE", "DUREE_REQANEUF", "TYPBAT2",
-    "KAPITAL12", "KAPITAL25", "KAPITAL32", "SURFACE1", "SURFACE4", "SURFACE10",
-    "NBBAT1", "RISK1", "RISK7", "EQUIPEMENT4", "EQUIPEMENT6", "ZONE_VENT",
-    "ANNEE_ASSURANCE", "ZONE",
-    "surface_totale", "capital_total", "surface_par_batiment",
-    "capital_par_surface", "capital_moyen_par_batiment"
+    "ID",
+    "TYPERS",
+    "ANCIENNETE",
+    "DUREE_REQANEUF",
+    "TYPBAT2",
+    "KAPITAL12",
+    "KAPITAL25",
+    "KAPITAL32",
+    "SURFACE1",
+    "SURFACE4",
+    "SURFACE10",
+    "NBBAT1",
+    "RISK1",
+    "RISK7",
+    "EQUIPEMENT4",
+    "EQUIPEMENT6",
+    "ZONE_VENT",
+    "ANNEE_ASSURANCE",
+    "ZONE",
+    "surface_totale",
+    "capital_total",
+    "surface_par_batiment",
+    "capital_par_surface",
+    "capital_moyen_par_batiment",
 ]
 
 CATEGORIAL_COLUMNS = [
-    "ACTIVIT2", "VOCATION", "CARACT1", "CARACT3", "CARACT4",
-    "TYPBAT1", "INDEM2", "FRCH1", "FRCH2", "DEROG12", "DEROG13", "DEROG14",
-    "DEROG16", "TAILLE1", "TAILLE2", "COEFASS", "RISK6", "RISK8", "RISK9",
-    "RISK10", "RISK11", "RISK12", "RISK13", "EQUIPEMENT2", "EQUIPEMENT5"
+    "ACTIVIT2",
+    "VOCATION",
+    "CARACT1",
+    "CARACT3",
+    "CARACT4",
+    "TYPBAT1",
+    "INDEM2",
+    "FRCH1",
+    "FRCH2",
+    "DEROG12",
+    "DEROG13",
+    "DEROG14",
+    "DEROG16",
+    "TAILLE1",
+    "TAILLE2",
+    "COEFASS",
+    "RISK6",
+    "RISK8",
+    "RISK9",
+    "RISK10",
+    "RISK11",
+    "RISK12",
+    "RISK13",
+    "EQUIPEMENT2",
+    "EQUIPEMENT5",
 ]
 
 ALL_COLUMNS = NUMERICAL_COLUMNS + CATEGORIAL_COLUMNS
 
 # Création de variables dérivées
 for df in [X_train, X_test]:
-    df["surface_totale"] = df[["SURFACE1", "SURFACE4", "SURFACE10"]].apply(pd.to_numeric, errors="coerce").sum(axis=1)
-    df["capital_total"] = df[["KAPITAL12", "KAPITAL25", "KAPITAL32"]].apply(pd.to_numeric, errors="coerce").sum(axis=1)
+    df["surface_totale"] = (
+        df[["SURFACE1", "SURFACE4", "SURFACE10"]].apply(pd.to_numeric, errors="coerce").sum(axis=1)
+    )
+    df["capital_total"] = (
+        df[["KAPITAL12", "KAPITAL25", "KAPITAL32"]]
+        .apply(pd.to_numeric, errors="coerce")
+        .sum(axis=1)
+    )
     df["surface_par_batiment"] = df["surface_totale"] / df["NBBAT1"].replace(0, np.nan)
     df["capital_par_surface"] = df["capital_total"] / df["surface_totale"].replace(0, np.nan)
     df["capital_moyen_par_batiment"] = df["capital_total"] / df["NBBAT1"].replace(0, np.nan)
@@ -52,6 +98,7 @@ for col in NUMERICAL_COLUMNS:
         X_train[col] = pd.to_numeric(X_train[col], errors="coerce")
     if col in X_test.columns:
         X_test[col] = pd.to_numeric(X_test[col], errors="coerce")
+
 
 # ---------------------------------------------
 # Définition des classes custom
@@ -72,6 +119,7 @@ class ColumnSelector(BaseEstimator, TransformerMixin):
     transform(X)
         Retourne un DataFrame ne contenant que les colonnes sélectionnées.
     """
+
     def __init__(self, selected_columns):
         self.selected_columns = selected_columns
 
@@ -102,6 +150,7 @@ class MissingValueFiller(BaseEstimator, TransformerMixin):
     transform(X)
         Remplit les NaN selon le type des colonnes.
     """
+
     def __init__(self, num_cols=None, cat_cols=None):
         self.num_cols = num_cols
         self.cat_cols = cat_cols
@@ -138,6 +187,7 @@ class ManualCountEncoder(BaseEstimator, TransformerMixin):
     transform(X)
         Applique le mapping de fréquence à chaque colonne catégorielle.
     """
+
     def __init__(self, cat_cols=None):
         self.cat_cols = cat_cols
         self.count_maps = {}
@@ -183,6 +233,7 @@ class ColumnDropper(BaseEstimator, TransformerMixin):
     transform(X)
         Supprime les colonnes identifiées.
     """
+
     def __init__(self, num_cols=None, missing_thresh=0.4, var_thresh=0.01, corr_thresh=0.95):
         self.num_cols = num_cols
         self.missing_thresh = missing_thresh
@@ -208,7 +259,9 @@ class ColumnDropper(BaseEstimator, TransformerMixin):
 
         corr_matrix = X_copy.select_dtypes(include=["number"]).corr().abs()
         upper_tri = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-        high_corr_cols = [col for col in upper_tri.columns if any(upper_tri[col] > self.corr_thresh)]
+        high_corr_cols = [
+            col for col in upper_tri.columns if any(upper_tri[col] > self.corr_thresh)
+        ]
         drop_cols += high_corr_cols
 
         self.columns_to_drop_ = list(set(drop_cols))
@@ -234,6 +287,7 @@ class ScalerWrapper(BaseEstimator, TransformerMixin):
     transform(X)
         Applique la transformation standardisée.
     """
+
     def __init__(self, num_cols=None):
         self.num_cols = num_cols
         self.scaler = StandardScaler()
@@ -249,16 +303,19 @@ class ScalerWrapper(BaseEstimator, TransformerMixin):
             X_copy[self.num_cols] = self.scaler.transform(X_copy[self.num_cols])
         return X_copy
 
+
 # ---------------------------------------------
 # Création pipeline complet
 # ---------------------------------------------
-preprocessing_pipeline = Pipeline([
-    ("select", ColumnSelector(ALL_COLUMNS)),
-    ("missing", MissingValueFiller(NUMERICAL_COLUMNS, CATEGORIAL_COLUMNS)),
-    ("encoding", ManualCountEncoder(CATEGORIAL_COLUMNS)),
-    ("drop", ColumnDropper(NUMERICAL_COLUMNS)),
-    ("scaling", ScalerWrapper(NUMERICAL_COLUMNS))
-])
+preprocessing_pipeline = Pipeline(
+    [
+        ("select", ColumnSelector(ALL_COLUMNS)),
+        ("missing", MissingValueFiller(NUMERICAL_COLUMNS, CATEGORIAL_COLUMNS)),
+        ("encoding", ManualCountEncoder(CATEGORIAL_COLUMNS)),
+        ("drop", ColumnDropper(NUMERICAL_COLUMNS)),
+        ("scaling", ScalerWrapper(NUMERICAL_COLUMNS)),
+    ]
+)
 
 X_train_processed = preprocessing_pipeline.fit_transform(X_train)
 X_test_processed = preprocessing_pipeline.transform(X_test)
@@ -270,10 +327,7 @@ model.fit(X_train_processed, y_train)
 # ---------------------------------------------
 # Pipeline final avec modèle
 # ---------------------------------------------
-full_pipeline = Pipeline([
-    ("preprocessing", preprocessing_pipeline),
-    ("model", model)
-])
+full_pipeline = Pipeline([("preprocessing", preprocessing_pipeline), ("model", model)])
 
 
 # 🔁 Prédiction sur les 10 premières lignes du test

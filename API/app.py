@@ -5,13 +5,24 @@ Ce module contient le principale de l'API permettant de la lancer et d'avoir les
 from flask_restx import fields
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from flask import Flask
 from flask_restx import Api, Resource
 import pandas as pd
 from models.loader import load_model_freq, load_model_montant
-from models.input_schema import get_input_model_charge, get_input_model_freq, get_input_model_montant
-from models_pkls.frequence.model_to_pkl import ColumnSelector, MissingValueFiller, ManualCountEncoder, ColumnDropper, ScalerWrapper
+from models.input_schema import (
+    get_input_model_charge,
+    get_input_model_freq,
+    get_input_model_montant,
+)
+from models_pkls.frequence.model_to_pkl import (
+    ColumnSelector,
+    MissingValueFiller,
+    ManualCountEncoder,
+    ColumnDropper,
+    ScalerWrapper,
+)
 from models.config import CATEGORIAL_COLUMNS
 from models.config_montant import CATEGORICAL_COLUMNS_MONTANT, ORDINAL_COLUMNS_MONTANT
 from flask_cors import CORS
@@ -62,7 +73,7 @@ class PredictFreq(Resource):
     @ns.expect(input_model_freq)
     def post(self):
         """Reçoit les données d'entrée, applique le modèle de fréquence et renvoie une prédiction.
-        
+
         Returns
         -------
         dict
@@ -79,7 +90,6 @@ class PredictFreq(Resource):
                 df[col] = "Inconnu"
             else:
                 df[col] = df[col].astype(str)
-
 
         for col in df.columns:
             if col not in CATEGORIAL_COLUMNS:
@@ -104,7 +114,6 @@ class PredictFreq(Resource):
         return {"prediction": float(prediction)}
 
 
-
 @ns.route("/montant")
 class PredictMontant(Resource):
     """Endpoint pour prédire le montant."""
@@ -112,7 +121,7 @@ class PredictMontant(Resource):
     @ns.expect(input_model_montant)
     def post(self):
         """Reçoit les données d'entrée, applique le modèle de montant et renvoie une prédiction.
-        
+
         Returns
         -------
         dict
@@ -166,13 +175,13 @@ class PredictChargeBis(Resource):
     @ns.expect(input_model_charge)
     def post(self):
         """Reçoit les données d'entrée, applique les modèles de montant, de fréquence et renvoie une prédiction.
-        
+
         Returns
         -------
         dict
             La prédiction de la charge.
         """
-        payload = api.payload 
+        payload = api.payload
         df = pd.DataFrame([payload])
 
         # --- 1) Prépa pour freq (caté + num) ---
@@ -186,15 +195,15 @@ class PredictChargeBis(Resource):
                 df[col] = pd.to_numeric(df[col], errors="coerce")
         # mêmes calculs dérivés que dans /freq
         if "surface_totale" not in df:
-            df["surface_totale"] = df[["SURFACE1","SURFACE4","SURFACE10"]].sum(axis=1)
+            df["surface_totale"] = df[["SURFACE1", "SURFACE4", "SURFACE10"]].sum(axis=1)
         if "capital_total" not in df:
-            df["capital_total"] = df[["KAPITAL12","KAPITAL25","KAPITAL32"]].sum(axis=1)
+            df["capital_total"] = df[["KAPITAL12", "KAPITAL25", "KAPITAL32"]].sum(axis=1)
         if "surface_par_batiment" not in df:
-            df["surface_par_batiment"] = df["surface_totale"]/df["NBBAT1"].replace(0,pd.NA)
+            df["surface_par_batiment"] = df["surface_totale"] / df["NBBAT1"].replace(0, pd.NA)
         if "capital_par_surface" not in df:
-            df["capital_par_surface"] = df["capital_total"]/df["surface_totale"].replace(0,pd.NA)
+            df["capital_par_surface"] = df["capital_total"] / df["surface_totale"].replace(0, pd.NA)
         if "capital_moyen_par_batiment" not in df:
-            df["capital_moyen_par_batiment"] = df["capital_total"]/df["NBBAT1"].replace(0,pd.NA)
+            df["capital_moyen_par_batiment"] = df["capital_total"] / df["NBBAT1"].replace(0, pd.NA)
 
         # clone pour montant
         df_mont = df.copy()
@@ -219,18 +228,19 @@ class PredictChargeBis(Resource):
         df_mont = df_mont[feats]
 
         # --- 3) Prédictions & calcul de la charge ---
-        freq_pred    = model_freq.predict(df)[0]
+        freq_pred = model_freq.predict(df)[0]
         montant_pred = model_montant.predict(df_mont)[0]
-        annee        = float(df["annee_survenance"].iat[0])
+        annee = float(df["annee_survenance"].iat[0])
 
         charge = freq_pred * montant_pred * annee
 
         return {
-            "frequence":        float(freq_pred),
-            "montant":         float(montant_pred),
-            "annee_survenance":  annee,
-            "charge":          float(charge)
+            "frequence": float(freq_pred),
+            "montant": float(montant_pred),
+            "annee_survenance": annee,
+            "charge": float(charge),
         }
+
 
 if __name__ == "__main__":
     app.run(debug=True)
