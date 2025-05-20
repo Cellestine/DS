@@ -90,9 +90,9 @@
     ```
 
 4. **Route predict/charge** 
-    POST /predict/charge
-    Pipeline complet + calcul de la charge.
-    Calcule la charge = fréquence × montant × années.
+    - POST /predict/charge
+    - Pipeline complet + calcul de la charge.
+    - Calcule la charge = fréquence × montant × années.
 
     Payload : 
     ```bash
