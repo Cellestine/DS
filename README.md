@@ -52,24 +52,24 @@
 
 ## 4. Documentation Swagger
     Visiter :
-
     http://localhost:5000/swagger/
     pour tester les endpoints et consulter les schémas d’entrée/sortie.
 
 ---
 
 ## 5. Endpoints
-    GET /health
-    Vérifie que l’API fonctionne.
+1. **Route Health**    
+    - GET /health
+    - Vérifie que l’API fonctionne.
     Réponse 200
     
     ```bash
     { "status": "ok", "message": "API is up and running!" }
     ```
     
-
-    POST /predict/freq
-    Prédit la fréquence annuelle d’incendie.
+2. **Route predict/freq** 
+    - POST /predict/freq
+    - Prédit la fréquence annuelle d’incendie.
 
     Payload : selon InputFreq (Swagger)
 
@@ -78,8 +78,9 @@
     { "prediction": 0.05 }
     ```
 
-    POST /predict/montant
-    Prédit le montant moyen d’indemnisation.
+3. **Route predict/montant** 
+    - POST /predict/montant
+    - Prédit le montant moyen d’indemnisation.
     
     Payload : selon InputMontant (Swagger)
 
@@ -88,6 +89,7 @@
     { "prediction": 120000.0 }
     ```
 
+4. **Route predict/charge** 
     POST /predict/charge
     Pipeline complet + calcul de la charge.
     Calcule la charge = fréquence × montant × années.
