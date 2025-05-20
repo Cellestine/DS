@@ -1,4 +1,6 @@
-# prediction_frequence_assurance
+"""
+factorized functions nécessaire pour les tests unitaires de la fréquence.
+"""
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler

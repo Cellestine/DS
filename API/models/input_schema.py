@@ -1,3 +1,6 @@
+"""
+Ce module contient les fonctions permettant d'inserer les inputs JSON.
+"""
 from flask_restx import fields
 
 

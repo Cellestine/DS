@@ -1,3 +1,7 @@
+"""
+Ce module contient le principale de l'API permettant de la lancer et d'avoir les endpoints.
+"""
+
 from flask_restx import fields
 import sys
 import os

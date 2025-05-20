@@ -1,3 +1,7 @@
+"""
+Ce module contient les fonctions permettant de load les models pour lancer l'API.
+"""
+
 import joblib
 
 
