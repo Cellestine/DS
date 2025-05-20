@@ -1,3 +1,6 @@
+"""
+Refactoring du code de prétraitement pour le rendre plus modulaire et réutilisable.
+"""
 import os
 import joblib
 import pandas as pd
